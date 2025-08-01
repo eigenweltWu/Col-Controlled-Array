@@ -323,10 +323,16 @@ class ArrayTools:
         
         return np.max(sidelobes) if len(sidelobes) > 0 else -100 # 如果没有旁瓣，返回一个很小的值
 
-    def plot_pattern_performance(self, theta_target_deg, phi_target_deg):
+    def plot_pattern_performance(self, theta_target_deg, phi_target_deg, vmin=None, vmax=None):
         """
         可视化最终的波束性能，包括三维图、顶视图和目标平面切片。
         需要先运行 `calculate_pattern`。
+
+        Args:
+            theta_target_deg (float): 目标俯仰角 (度)
+            phi_target_deg (float): 目标方位角 (度)
+            vmin (float, optional): 颜色条的最小值
+            vmax (float, optional): 颜色条的最大值
         """
         if self.Gain is None:
             raise ValueError("必须先调用 'calculate_pattern' 方法计算方向图。")
@@ -339,7 +345,11 @@ class ArrayTools:
         Phi, Theta = np.meshgrid(self.phi_scan_rad, self.theta_scan_rad)
         R_offset = self.Gain - np.min(self.Gain)
         X, Y, Z = R_offset * np.sin(Theta) * np.cos(Phi), R_offset * np.sin(Theta) * np.sin(Phi), R_offset * np.cos(Theta)
-        norm = Normalize(vmin=np.min(self.Gain), vmax=np.max(self.Gain))
+        
+        # 使用用户提供的vmin和vmax，如果没有提供则使用默认值
+        norm = Normalize(vmin=vmin if vmin is not None else np.min(self.Gain), 
+                         vmax=vmax if vmax is not None else np.max(self.Gain))
+                          
         ax1.plot_surface(X, Y, Z, facecolors=plt.cm.jet(norm(self.Gain)), rstride=2, cstride=2, antialiased=True, shade=False)
         ax1.set_title('三维方向图')
         ax1.set_xlabel('X')
@@ -376,23 +386,24 @@ class ArrayTools:
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
 
-    def visualize_phase_comparison(self, initial_phi, final_phi):
+    def visualize_phase_comparison(self, initial_phi, final_phi, cmap='gray'):
         """
         并排可视化初始相位和最终相位矩阵。
         
         Args:
             initial_phi (np.array): 初始0/1相位矩阵。
             final_phi (np.array): 最终0/1相位矩阵。
+            cmap (str, optional): 颜色映射名称，默认为'gray'
         """
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
         fig.suptitle('相位分布对比', fontsize=16)
         
-        ax1.imshow(initial_phi, cmap='gray', interpolation='nearest')
+        ax1.imshow(initial_phi, cmap=cmap, interpolation='nearest')
         ax1.set_title('初始相位 Φ_mn')
         ax1.set_xlabel('列 (M)')
         ax1.set_ylabel('行 (N)')
         
-        im = ax2.imshow(final_phi, cmap='gray', interpolation='nearest')
+        im = ax2.imshow(final_phi, cmap=cmap, interpolation='nearest')
         ax2.set_title('最终相位')
         ax2.set_xlabel('列 (M)')
 

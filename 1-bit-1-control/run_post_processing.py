@@ -16,7 +16,7 @@ if __name__ == '__main__':
     HPBW_H_DEG = 20
     
     # --- 输入文件名 (必须与优化脚本的输出文件名相同) ---
-    OPTIMIZED_PHASE_FILENAME = "optimized_initial_phase.csv"
+    OPTIMIZED_PHASE_FILENAME = "3060_14_14_120_200.csv"
 
     # =========================================================================
     #  2. 执行后处理分析
@@ -53,13 +53,27 @@ if __name__ == '__main__':
         try:
             theta_in = float(input("请输入目标俯仰角 (θ, e.g., 25.0): "))
             phi_in = float(input("请输入目标方位角 (φ, e.g., 0.0): "))
+            
+            # 添加颜色条范围的输入
+            try:
+                vmin_in = float(input("请输入颜色条最小值 (留空使用默认值): "))
+            except ValueError:
+                vmin_in = None
+                
+            try:
+                vmax_in = float(input("请输入颜色条最大值 (留空使用默认值): "))
+            except ValueError:
+                vmax_in = None
         except ValueError:
             print("无效输入，将使用默认值 (θ=25.0°, φ=0.0°)。")
             theta_in, phi_in = 25.0, 0.0
+            vmin_in, vmax_in = None, None
 
         # 运行后处理分析
         my_array.run_post_analysis(
             initial_phi_path=optimized_phase_path, 
             theta_target_deg=theta_in, 
-            phi_target_deg=phi_in
+            phi_target_deg=phi_in,
+            vmin=vmin_in,
+            vmax=vmax_in
         )

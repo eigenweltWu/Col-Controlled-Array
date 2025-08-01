@@ -103,11 +103,13 @@ if __name__ == '__main__':
         array_instance.comp_phase_rad = optimized_phase_matrix_01 * np.pi
         
         print("最优相位排布已应用，正在计算并显示最终方向图...")
+        # 添加 vmin 和 vmax 参数控制 color bar 范围
         array_instance.calculate_pattern()
-        array_instance.plot_pattern_performance(theta_target_deg=20.0, phi_target_deg=0.0)
+        array_instance.plot_pattern_performance(theta_target_deg=20.0, phi_target_deg=0.0, vmin=-30, vmax=0)
         
         print("显示初始相位与优化后相位的对比...")
-        array_instance.visualize_phase_comparison(INITIAL_PHASE_MATRIX_01, optimized_phase_matrix_01)
+        # 添加 cmap 参数自定义颜色映射
+        array_instance.visualize_phase_comparison(INITIAL_PHASE_MATRIX_01, optimized_phase_matrix_01, cmap='viridis')
 
         # 保存最优结果
         output_filename = 'demo_optimized_pattern.csv'

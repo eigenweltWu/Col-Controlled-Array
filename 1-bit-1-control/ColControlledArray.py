@@ -258,7 +258,7 @@ class ColControlledArray(ArrayTools):
         if best_phi_flat is not None: return best_phi_flat.reshape((self.Ny, self.Nx)), best_fitness
         return None, -1
 
-    def run_post_analysis(self, initial_phi_path, theta_target_deg, phi_target_deg):
+    def run_post_analysis(self, initial_phi_path, theta_target_deg, phi_target_deg, vmin=None, vmax=None, phase_cmap='gray'):
         try:
             initial_phi = np.loadtxt(initial_phi_path, delimiter=',', dtype=int)
         except Exception as e:
@@ -276,9 +276,9 @@ class ColControlledArray(ArrayTools):
         self.comp_phase_rad = self.xp.asarray(final_phi * np.pi)
         self.calculate_pattern(theta_points=181, phi_points=361)
         
-        # MODIFIED: 调用父类中的公有可视化方法
-        self.plot_pattern_performance(theta_target_deg, phi_target_deg)
-        self.visualize_phase_comparison(initial_phi, final_phi)
+        # MODIFIED: 调用父类中的公有可视化方法，并传递新参数
+        self.plot_pattern_performance(theta_target_deg, phi_target_deg, vmin=vmin, vmax=vmax)
+        self.visualize_phase_comparison(initial_phi, final_phi, cmap=phase_cmap)
 
 if __name__ == '__main__':
     plt.rcParams["font.family"] = ["SimHei", "sans-serif"]
