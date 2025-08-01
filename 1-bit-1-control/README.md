@@ -10,7 +10,8 @@
 
 ### `run_global_optimization`典型计算时长：
 
-|M|N|n_generation|population_size|i5-14600+RTX 4090D|i5-14600+RTX 3060Ti|E5-2660|i5-14600|
-|---|---|---|---|---|---|---|---|
-|14|14|50|80|5m52s|12m32s|N/A|N/A|
-|14|14|120|200|N/A|N/A|N/A|N/A|
+|M|N|n_generation|population_size|i7-14700+RTX 4090D|i5-14600kf+RTX 3060|E5-2660|i7-14700|Memory(MB)|
+|---|---|---|---|---|---|---|---|---|
+|14|14|50|80|5m52s|12m32s|N/A|N/A|1708|
+|14|14|120|200|34m46s|1h13m41s|N/A|N/A|3822|
+|31|31|300|200|N/A|N/A|N/A|N/A|?|
