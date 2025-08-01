@@ -6,12 +6,15 @@ import os
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import mplcursors
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, message='CUDA path could not be detected.*')
 
 # 全局导入cupy，以便在类型提示和异常处理中使用
 try:
     import cupy as cp
 except ImportError:
     cp = None # 如果未安装cupy，则将其设置为None
+
 
 class ArrayTools:
     """
@@ -41,17 +44,23 @@ class ArrayTools:
         self.xp = np  # 默认使用numpy作为计算后端
 
         # --- GPU/CPU 检测逻辑 ---
-        if cp and cp.cuda.is_available():
-            self.use_gpu = True
-            self.xp = cp
+        try:
+            if cp and cp.cuda.is_available():
+                self.use_gpu = True
+                self.xp = cp
+                if self.isdebug:
+                    print("检测到GPU，将使用GPU加速")
+            elif cp:
+                if self.isdebug:
+                    print("检测到cupy但未找到可用的GPU，将使用CPU计算")
+            else:
+                if self.isdebug:
+                    print("未安装cupy，将使用CPU计算")
+        except Exception as e:
             if self.isdebug:
-                print("检测到GPU，将使用GPU加速")
-        elif cp:
-            if self.isdebug:
-                print("检测到cupy但未找到可用的GPU，将使用CPU计算")
-        else:
-            if self.isdebug:
-                print("未安装cupy，将使用CPU计算")
+                print(f"GPU检测失败: {str(e)}，将使用CPU计算")
+            self.use_gpu = False
+            self.xp = np
         
         if self.isdebug:
             print("ArrayTools基类已初始化。")
@@ -91,7 +100,10 @@ class ArrayTools:
             filepath (str): 保存文件的路径, e.g., 'phases.csv'。
         """
         # 确保数据在CPU上
-        phase_matrix_cpu = self.xp.asnumpy(self.comp_phase_rad) if self.use_gpu else self.comp_phase_rad
+        if self.use_gpu:
+            phase_matrix_cpu = self.xp.asnumpy(self.comp_phase_rad)
+        else:
+            phase_matrix_cpu = self.comp_phase_rad
         
         # 将弧度转换为0/1格式以便存储
         phase_matrix_01 = (phase_matrix_cpu / np.pi).astype(int)
@@ -221,9 +233,14 @@ class ArrayTools:
         Gain[Gain < -40] = -40
 
         # 将结果转回CPU内存(numpy数组)供matplotlib使用
-        self.theta_scan_rad = self.xp.asnumpy(self.theta_scan_rad) if self.use_gpu else self.theta_scan_rad
-        self.phi_scan_rad = self.xp.asnumpy(self.phi_scan_rad) if self.use_gpu else self.phi_scan_rad
-        self.Gain = self.xp.asnumpy(Gain) if self.use_gpu else Gain
+        if self.use_gpu:
+            self.theta_scan_rad = self.xp.asnumpy(self.theta_scan_rad)
+            self.phi_scan_rad = self.xp.asnumpy(self.phi_scan_rad)
+            self.Gain = self.xp.asnumpy(Gain)
+        else:
+            self.theta_scan_rad = self.theta_scan_rad
+            self.phi_scan_rad = self.phi_scan_rad
+            self.Gain = Gain
         
         if self.isdebug:
             print("方向图计算完成。")
@@ -271,11 +288,17 @@ class ArrayTools:
         E_abs = xp.abs(E_field_slice)
         E_max = xp.max(E_abs)
         if E_max == 0:
-            return np.full(theta_points, -100), np.degrees(xp.asnumpy(theta_scan_rad))
+            if self.use_gpu:
+                return np.full(theta_points, -100), np.degrees(xp.asnumpy(theta_scan_rad))
+            else:
+                return np.full(theta_points, -100), np.degrees(theta_scan_rad)
             
         Gain = 20 * xp.log10(E_abs / E_max)
         
-        return self.xp.asnumpy(Gain), np.degrees(self.xp.asnumpy(theta_scan_rad))
+        if self.use_gpu:
+            return self.xp.asnumpy(Gain), np.degrees(self.xp.asnumpy(theta_scan_rad))
+        else:
+            return Gain, np.degrees(theta_scan_rad)
 
     def get_sidelobe_level(self, gain_db):
         """
