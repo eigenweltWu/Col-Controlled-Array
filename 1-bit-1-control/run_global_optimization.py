@@ -71,7 +71,21 @@ if __name__ == '__main__':
     #  3. 保存结果
     # =========================================================================
     end_time = time.time()
-    print(f"全局优化耗时: {end_time - start_time:.2f} 秒")
+    elapsed_seconds = int(end_time - start_time)
+    days = elapsed_seconds // 86400
+    hours = (elapsed_seconds % 86400) // 3600
+    minutes = (elapsed_seconds % 3600) // 60
+    seconds = elapsed_seconds % 60
+    time_parts = []
+    if days > 0:
+        time_parts.append(f"{days} 天")
+    if hours > 0:
+        time_parts.append(f"{hours} 小时")
+    if minutes > 0:
+        time_parts.append(f"{minutes} 分钟")
+    if seconds > 0:
+        time_parts.append(f"{seconds} 秒")
+    print(f"全局优化耗时: {' '.join(time_parts)}")
     
     if optimized_phi is not None:
         print(f"\n全局优化完成！最优适应度: {fitness:.6f}")
